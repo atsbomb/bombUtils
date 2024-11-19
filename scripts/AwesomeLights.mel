@@ -1,0 +1,244 @@
+//Welcome to Awesome lights! 1.0 pal, your friendly neighborhood maya viewport lighting thingy...majiggy. Do you like to make things purdy while ya busy animat'n? Me too! 
+//With this admission we are now bound by blood destined to spend eternity animatin together! Yerp, just you and me together in infinite space and time animatin those dancin babies! Awesome Lights! was brought to you by the mighty genius of Boon Cotter, Rubén Moragon and Darren Randall. 
+//Max Gariepy didn't really do anything on the tool but he was just there hangin out with us for moral support, moochin da free tools.
+
+string $toolCreate = "createTool";
+string $toolName = "Awesome Lights";
+
+if ( `window -exists $toolCreate` )
+{
+    
+    deleteUI $toolCreate;
+}
+
+window -t $toolName -w 300 -h 300 $toolCreate;
+
+frameLayout -label "UI CTRLS" -bs "etchedIn" -cll 1 -cl 0; 
+
+gridLayout -nc 3 -cwh 95 40;
+
+button -label "Floor Checkers" -c "floor_checker_maker_clicked";
+button -label "Floor Grid" -c "floor_grid_maker_clicked";
+button -label "Lights" -c "Lights_clicked";
+button -label "Cubes" -c "Cubes_clicked";
+button -label "Character Shader" -c "Character_Shader_clicked";
+button -label "Clean Scene" -c "Clean_Scene_clicked";
+
+setParent ..;
+
+showWindow $toolCreate; 
+
+global proc floor_checker_maker_clicked ()
+{
+    
+//Create floor with Checker Shader
+shadingNode -n "floorShader" -asShader lambert;
+defaultNavigation -defaultTraversal -destination "floorShader.color";
+createRenderNode -allWithTexturesUp "defaultNavigation -force true -connectToExisting -source %node -destination floorShader.color" "";
+shadingNode -n "checkerText" -asTexture checker;
+shadingNode -n "checkerUtil" -asUtility place2dTexture;
+connectAttr checkerUtil.outUV checkerText.uv;
+connectAttr checkerUtil.outUvFilterSize checkerText.uvFilterSize;
+defaultNavigation -force true -connectToExisting -source checkerText -destination floorShader.color; window -e -vis false createRenderNodeWindow;
+connectAttr -force checkerText.outColor floorShader.color;
+rename checkerText "floorChecker" ;
+setAttr "checkerUtil.repeatU" 50;
+setAttr "checkerUtil.repeatV" 50;
+setAttr "floorChecker.color1" -type double3 0.252 0.276 0.3 ;
+setAttr "floorChecker.color2" -type double3 0.16 0.18 0.2 ;
+setAttr "floorShader.ambientColor" -type double3 0.332 0.332 0.332 ;
+polyPlane -n "floorPlane" -w 8000 -h 8000 -sx 10 -sy 10 -ax 0 0 1 -cuv 2 -ch 1;
+select -r floorPlane ;
+setAttr "floorPlane.rotateX" -90;
+hyperShade -assign floorShader;  
+    
+}
+
+global proc floor_grid_maker_clicked ()
+{
+//Create floor with grid Shader   
+shadingNode -n "floorGrid" -asShader blinn;
+sets -renderable true -noSurfaceShader true -empty -name floorGridSG;
+connectAttr -f floorGrid.outColor floorGridSG.surfaceShader;
+setAttr "floorGrid.color" -type double3 0.14 0.14 0.14 ;
+shadingNode -n "layerNode" -asTexture layeredTexture;
+setAttr layerNode.inputs[0].color -type "double3" 0.2 0.7 0.3;
+setAttr layerNode.inputs[0].alpha 1;
+setAttr layerNode.inputs[0].blendMode 1;
+shadingNode -n "largeGrid" -asTexture grid;
+shadingNode -n "largeGridTexture" -asUtility place2dTexture;
+connectAttr largeGridTexture.outUV largeGrid.uv;
+connectAttr largeGridTexture.outUvFilterSize largeGrid.uvFilterSize;
+setAttr "largeGridTexture.repeatU" 20;
+setAttr "largeGridTexture.repeatV" 20;
+setAttr "largeGrid.uWidth" 0.01;
+setAttr "largeGrid.vWidth" 0.01;
+shadingNode -n "mediumGrid" -asTexture grid;
+shadingNode -n "mediumGridTexture" -asUtility place2dTexture;
+connectAttr mediumGridTexture.outUV mediumGrid.uv;
+connectAttr mediumGridTexture.outUvFilterSize mediumGrid.uvFilterSize;
+setAttr "mediumGridTexture.repeatU" 60;
+setAttr "mediumGridTexture.repeatV" 60;
+setAttr "mediumGrid.uWidth" 0.01;
+setAttr "mediumGrid.vWidth" 0.01;
+shadingNode -n "smallGrid" -asTexture grid;
+shadingNode -n "smallGridTexture" -asUtility place2dTexture;
+connectAttr smallGridTexture.outUV smallGrid.uv;
+connectAttr smallGridTexture.outUvFilterSize smallGrid.uvFilterSize;
+setAttr "smallGridTexture.repeatU" 180;
+setAttr "smallGridTexture.repeatV" 180;
+setAttr "smallGrid.uWidth" 0.005;
+setAttr "smallGrid.vWidth" 0.005;
+setAttr "smallGridTexture.offsetU" 0.03;
+setAttr "smallGridTexture.offsetV" 0.03;
+shadingNode -n "smallerGrid" -asTexture grid;
+shadingNode -n "smallerGridTexture" -asUtility place2dTexture;
+connectAttr smallerGridTexture.outUV smallerGrid.uv;
+connectAttr smallerGridTexture.outUvFilterSize smallerGrid.uvFilterSize;
+setAttr "smallerGridTexture.repeatU" 180;
+setAttr "smallerGridTexture.repeatV" 180;
+setAttr "smallerGrid.uWidth" 0.005;
+setAttr "smallerGrid.vWidth" 0.005;
+setAttr "smallerGridTexture.offsetU" -0.03;
+setAttr "smallerGridTexture.offsetV" -0.03;
+connectAttr -f layerNode.outColor floorGrid.specularColor;
+setAttr "layerNode.inputs[0].blendMode" 8;
+setAttr "layerNode.inputs[1].blendMode" 8;
+setAttr "layerNode.inputs[2].blendMode" 8;
+setAttr "layerNode.inputs[3].blendMode" 8;
+connectAttr -f largeGrid.outColor layerNode.inputs[0].color;
+connectAttr -f mediumGrid.outColor layerNode.inputs[1].color;
+connectAttr -f smallGrid.outColor layerNode.inputs[2].color;
+connectAttr -f smallerGrid.outColor layerNode.inputs[3].color;
+polyPlane -n "floorPlane" -w 8000 -h 8000 -sx 10 -sy 10 -ax 0 0 1 -cuv 2 -ch 1;
+select -r floorPlane ;
+setAttr "floorPlane.rotateX" -90;
+hyperShade -assign floorGrid;      
+    
+}
+
+
+global proc Lights_clicked ()
+{
+    
+//create the lights
+spotLight -n "keyLight" -i 0.4 -ca 1 -p 40 -d 0 -do 0 -rgb 0.85 0.925 1;
+setAttr "keyLight.translateY" 711;
+setAttr "keyLight.translateZ" 585;
+setAttr "keyLight.rotateX" -38;
+setAttr "keyLight.scaleZ" 20;
+setAttr "keyLight.scaleX" 20;
+setAttr "keyLight.scaleY" 20;
+spotLight -n "frontLight" -i 0.5 -ca 26 -p 10 -d 0 -do 20 -rgb 1 0.933 0.8 -rs 0;
+setAttr "frontLight.translateX" -347;
+setAttr "frontLight.translateY" 640;
+setAttr "frontLight.translateZ" 173;
+setAttr "frontLight.rotateX" -83;
+setAttr "frontLight.rotateY" -47;
+setAttr "frontLight.rotateZ" 25;
+setAttr "frontLight.scaleZ" 20;
+setAttr "frontLight.scaleX" 20;
+setAttr "frontLight.scaleY" 20;
+spotLight -n "rimLight" -i 1.6 -ca 67 -p 10 -d 0 -do 2.9 -rgb 0.152 0.379 0.607 -rs 1;
+setAttr "rimLight.translateX" 394;
+setAttr "rimLight.translateY" -340;
+setAttr "rimLight.translateZ" 183;
+setAttr "rimLight.rotateX" 80;
+setAttr "rimLight.rotateY" 28;
+setAttr "rimLight.rotateZ" 41;
+setAttr "rimLight.scaleZ" 20;
+setAttr "rimLight.scaleX" 20;
+setAttr "rimLight.scaleY" 20;
+select -r keyLight ;
+select -r keyLight frontLight ;
+select -r keyLight frontLight rimLight ;
+doGroup 0 1 1;
+select -r group1 ;
+setAttr "group1.rotateX" -90;
+select -r group1 ;
+rename "group1" "AwesomeLights";
+// Result: AwesomeLights // 
+//This sets the fog on and the attributes
+modelEditor -e -fogging true modelPanel4;
+setAttr "hardwareRenderingGlobals.ssaoEnable" 1;
+setAttr "hardwareRenderingGlobals.ssaoAmount" 1.148;
+setAttr "hardwareRenderingGlobals.ssaoRadius" 19;
+setAttr "hardwareRenderingGlobals.ssaoFilterRadius" 9;
+setAttr "hardwareRenderingGlobals.ssaoSamples" 32;
+setAttr "hardwareRenderingGlobals.hwFogStart" 900;
+setAttr "hardwareRenderingGlobals.hwFogEnd" 1680;
+setAttr "hardwareRenderingGlobals.hwFogColor" -type double3 0.033 0.033 0.033 ;
+setAttr "hardwareRenderingGlobals.hwFogAlpha" 0.950;    
+    
+}
+
+global proc Character_Shader_clicked ()
+{
+    
+//create a Blinn material for the character
+shadingNode -n "CharacterShader" -asShader blinn;
+sets -renderable true -noSurfaceShader true -empty -name blinn1SG;
+connectAttr -f CharacterShader.outColor blinn1SG.surfaceShader;
+setAttr "CharacterShader.color" -type double3 0.5 0.42028 0.42 ;
+setAttr "CharacterShader.color" -type double3 0.5 0.420293 0.42 ;
+setAttr "CharacterShader.color" -type double3 0.42 0.46 0.5 ;
+setAttr "CharacterShader.color" -type double3 0.58212 0.63756 0.693 ;
+setAttr "CharacterShader.ambientColor" -type double3 0.147 0.161 0.175 ;
+setAttr "CharacterShader.ambientColor" -type double3 0.14952 0.16376 0.178 ;
+setAttr "CharacterShader.specularColor" -type double3 0.25 0.416667 0.5 ;
+setAttr "CharacterShader.eccentricity" 0.5;
+setAttr "CharacterShader.specularRollOff" 0.7;
+    
+}
+
+global proc Cubes_clicked ()
+{
+    
+// Now we create da mash cubes // 
+polyCube -w 1 -h 1 -d 1 -sx 1 -sy 1 -sz 1 -ax 0 1 0 -cuv 4 -ch 1;
+// Result: pCube1 polyCube1 // 
+setAttr "pCube1.scaleZ" 5;
+setAttr "pCube1.scaleX" 5;
+setAttr "pCube1.scaleY" 5;
+rename "pCube1" "MashCube01";
+// Result: MashCube01 //
+MASHnewNetwork("MASH#");
+// Result: MASH1 MASH1_Repro MASH1_Distribute //
+select -r -ne MASH1 ;
+setAttr "MASH1_Distribute.arrangement" 6;
+setAttr "MASH1_Distribute.centerLinearDistribution" 1;
+setAttr "MASH1_Distribute.gridAmplitudeX" 3000;
+setAttr "MASH1_Distribute.gridAmplitudeY" 2000;
+setAttr "MASH1_Distribute.gridAmplitudeZ" 9000;
+setAttr "MASH1_Distribute.gridx" 8;
+setAttr "MASH1_Distribute.gridy" 12;
+setAttr "MASH1_Distribute.gridz" 12; 
+    
+}    
+// Clean the whole mess up //     
+global proc Clean_Scene_clicked ()
+{
+
+select -r floorPlane ;
+select -add AwesomeLights ;
+select -add keyLight ;
+select -add frontLight ;
+select -add rimLight ;
+select -add MashCube01 ;
+select -add MASH1_ReproMesh ;
+select -add -ne MASH1 ;
+
+doDelete;
+
+select -r floorShader ;
+doDelete;
+select -r floorChecker ;
+doDelete;
+select -r checkerUtil ;
+doDelete; 
+select -r floorShaderSG ;
+doDelete;
+
+    
+}    
+    
