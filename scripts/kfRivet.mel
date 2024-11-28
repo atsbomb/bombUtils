@@ -1,0 +1,318 @@
+//////////////////////////////////////////////////////
+//kfRivet
+//////////////////////////
+//Written by Kiel Figgins
+//www.3dfiggins.com
+//////////////////////////
+//Use to create locators that stick to polygon faces
+//////////////////////////
+//Version History
+//////////////////////////
+//1.00 (01-06-2021) - Original version
+//////////////////////////
+//Coming Soon
+/*
+
+Core functionality from:
+https://www.highend3d.com/maya/script/rivet-button-for-maya
+
+*/
+
+
+
+global proc kfRivet()
+{
+
+if (`window -q -ex kfRivetWin`)
+    	{
+    	showWindow kfRivetWin ;
+    	return ;
+    	}
+
+
+window -w 230 -h 600 -t "Rivet" -tlb true kfRivetWin ;
+formLayout mainSaveForm ;
+
+//UI pieces
+text -l "Naming:" txR_Name;
+textField -w 160 -tx "Pin" tfR_Name;
+
+text -l "A) Select Polygon Faces" txR_Face;
+button -l "Create Rivets on Faces" -w 200 -ann "" -c ("kfR_CreateRivets(1);") btnR_Face; 
+
+text -l "- - - OR - - -" txR_Or;
+
+text -l "B) Select (2) Polygon Edges" txR_Edge;
+button -l "Create Single Rivet" -w 200 -ann "" -c ("kfR_CreateRivets(2);") btnR_Edge; 
+
+
+//UI FormLayout
+formLayout -e
+    
+    	-af txR_Name "top" 8 
+    	-an txR_Name "bottom" 
+    	-af txR_Name "left" 5 
+    	-an txR_Name "right" 
+
+    	-af tfR_Name "top" 8 
+    	-an tfR_Name "bottom" 
+    	-ac tfR_Name "left" 5 txR_Name
+    	-an tfR_Name "right" 
+		
+		-ac txR_Face "top" 8 tfR_Name
+    	-an txR_Face "bottom" 
+    	-af txR_Face "left" 5 
+    	-an txR_Face "right"
+		
+		-ac btnR_Face "top" 8 txR_Face
+    	-an btnR_Face "bottom" 
+    	-af btnR_Face "left" 5 
+    	-an btnR_Face "right"
+		
+		-ac txR_Or "top" 8 btnR_Face
+    	-an txR_Or "bottom" 
+    	-af txR_Or "left" 5 
+    	-an txR_Or "right"
+		
+		-ac txR_Edge "top" 8 txR_Or
+    	-an txR_Edge "bottom" 
+    	-af txR_Edge "left" 5 
+    	-an txR_Edge "right"
+		
+		-ac btnR_Edge "top" 8 txR_Edge
+    	-an btnR_Edge "bottom" 
+    	-af btnR_Edge "left" 5 
+    	-an btnR_Edge "right"
+
+
+    	mainSaveForm ;
+
+    showWindow kfRivetWin ;
+
+    //Resize the main window
+    window -e -widthHeight 215 160 kfRivetWin;
+
+}//end of proc kfRivet
+
+////////////////////
+//UI Specific Procs
+
+
+
+global proc kfR_CreateRivets(int $which)
+{
+string $namer = `textField -q -tx tfR_Name`;
+
+if($which == 1){kfR_CreateRivet_Faces($namer);}
+
+if($which == 2)
+{
+	//Create Rivet
+	kfAnC_PFrivet(1);
+	
+	kfR_RenameRivet($namer, 0);
+}
+
+}//end of proc
+
+
+global proc kfR_CreateRivet_Faces(string $namer)
+{
+	//select faces
+	string $faces[] = `filterExpand -sm 34`;
+
+	int $counter;
+	int $sizer = size($faces);
+
+	for ($counter = 0; $counter < $sizer; $counter++)
+	{
+		//$counter = 0;
+		select $faces[$counter];
+		
+		//Create Rivet
+		kfAnC_PFrivet(0);
+		
+		kfR_RenameRivet($namer, $counter);
+	}//end of loop through faces
+
+}//end of proc
+
+
+
+
+global proc kfR_RenameRivet(string $namer, int $counter)
+{
+		//Rename Rivet componnents
+		string $rivet[] = `ls -sl`;
+		
+		//Get Connections
+		string $pos[] = `listConnections ($rivet[0] + ".translate")`;
+		string $loft[] = `listConnections ($pos[0] + ".inputSurface")`;
+		string $edge1[] = `listConnections ($loft[0] + ".inputCurve[0]")`;
+		string $edge2[] = `listConnections ($loft[0] + ".inputCurve[1]")`;
+		string $aim[] = `listConnections ($rivet[0] + ".rotateX")`;
+		
+		//Rename
+		select $pos;
+		rename ("rivet_" + $namer + "_" + $counter + "_POS");
+		string $pos[] = `ls -sl`;
+		
+		select $loft;
+		rename ("rivet_" + $namer + "_" + $counter + "_Loft");
+		string $loft[] = `ls -sl`;
+		
+		select $edge1;
+		rename ("rivet_" + $namer + "_" + $counter + "_Edge1");
+		string $edge1[] = `ls -sl`;
+		
+		select $edge2;
+		rename ("rivet_" + $namer + "_" + $counter + "_Edge2");
+		string $edge2[] = `ls -sl`;
+		
+		select $rivet;
+		rename ("rivet_" + $namer + "_" + $counter);
+		string $rivet[] = `ls -sl`;
+		
+		select $aim;
+		rename ("rivet_" + $namer + "_" + $counter + "_AimConstraint1");
+		string $aim[] = `ls -sl`;
+
+		select $rivet;
+}//end of proc
+
+
+global proc string kfAnC_PFrivet(int $userEdges)
+{
+
+string $sel[] = `ls -sl`;
+
+if(!$userEdges)
+{
+    ConvertSelectionToEdges;
+    string $es[] = `filterExpand -sm 32`;
+    select $es[0] $es[1];
+
+    //Check for Square face
+    ConvertSelectionToVertices;
+    string $vertC[] = `filterExpand -sm 31`;
+    if(`size($vertC)` == 3)
+    {
+        select $es[1] $es[2];
+        ConvertSelectionToVertices;
+        string $vertC2[] = `filterExpand -sm 31`;
+        if(`size($vertC2)` == 4)
+        {select $es[1] $es[2];}
+        else
+        {
+        select $es[0] $es[2];
+        ConvertSelectionToVertices;
+        string $vertC2[] = `filterExpand -sm 31`;
+        if(`size($vertC2)` == 4)
+        {select $es[0] $es[2];}
+        }
+    }//end of check
+    else
+    {select $es[0] $es[1];}
+}
+else
+{select $sel;}
+
+
+string $nameObject;
+string $namePOSI;
+
+string $parts[];
+string $list[] = `filterExpand -sm 32`;
+int $size = size($list);
+if ($size > 0)
+{
+    if ($size != 2)
+    {    error("No two edges selected");
+        return "";
+    }
+
+    tokenize($list[0],".",$parts);
+    $nameObject = $parts[0];
+    tokenize($list[0],"[]",$parts);
+    float $e1 = $parts[1];
+    tokenize($list[1],"[]",$parts);
+    float $e2 = $parts[1];
+
+    string $nameCFME1 = `createNode curveFromMeshEdge -n "rivetCurveFromMeshEdge1"`;
+        setAttr ".ihi" 1;
+        setAttr ".ei[0]"  $e1;
+    string $nameCFME2 = `createNode curveFromMeshEdge -n "rivetCurveFromMeshEdge2"`;
+        setAttr ".ihi" 1;
+        setAttr ".ei[0]"  $e2;
+    string $nameLoft = `createNode loft -n "rivetLoft1"`;
+        setAttr -s 2 ".ic";
+        setAttr ".u" yes;
+        setAttr ".rsn" yes;
+
+    $namePOSI = `createNode pointOnSurfaceInfo -n "rivetPointOnSurfaceInfo1"`;
+        setAttr ".turnOnPercentage" 1;
+        setAttr ".parameterU" 0.5;
+        setAttr ".parameterV" 0.5;
+
+    connectAttr -f ($nameLoft + ".os") ($namePOSI + ".is");
+    connectAttr ($nameCFME1 + ".oc") ($nameLoft + ".ic[0]");
+    connectAttr ($nameCFME2 + ".oc") ($nameLoft + ".ic[1]");
+    connectAttr ($nameObject + ".w") ($nameCFME1 + ".im");
+    connectAttr ($nameObject + ".w") ($nameCFME2 + ".im");
+}
+else
+{    $list = `filterExpand -sm 41`;
+    $size = size($list);
+
+    if ($size > 0)
+    {
+        if ($size != 1)
+        {    error("No one point selected");
+            return "";
+        }
+        tokenize($list[0],".",$parts);
+        $nameObject = $parts[0];
+        tokenize($list[0],"[]",$parts);
+        float $u = $parts[1];
+        float $v = $parts[2];
+        $namePOSI = `createNode pointOnSurfaceInfo -n "rivetPointOnSurfaceInfo1"`;
+                setAttr ".turnOnPercentage" 0;
+                setAttr ".parameterU" $u;
+                setAttr ".parameterV" $v;
+        connectAttr -f ($nameObject + ".ws") ($namePOSI + ".is");
+    }
+    else
+    {    error("No edges or point selected");
+        return "";
+    }
+}
+
+string $nameLocator = `createNode transform -n "rivet1"`;
+createNode locator -n ($nameLocator + "Shape") -p $nameLocator;
+
+string $nameAC = `createNode aimConstraint -p $nameLocator -n ($nameLocator + "_rivetAimConstraint1")`;
+    setAttr ".tg[0].tw" 1;
+    setAttr ".a" -type "double3" 0 1 0;
+    setAttr ".u" -type "double3" 0 0 1;
+    setAttr -k off ".v";
+    setAttr -k off ".tx";
+    setAttr -k off ".ty";
+    setAttr -k off ".tz";
+    setAttr -k off ".rx";
+    setAttr -k off ".ry";
+    setAttr -k off ".rz";
+    setAttr -k off ".sx";
+    setAttr -k off ".sy";
+    setAttr -k off ".sz";
+
+connectAttr ($namePOSI + ".position") ($nameLocator + ".translate");
+connectAttr ($namePOSI + ".n") ($nameAC + ".tg[0].tt");
+connectAttr ($namePOSI + ".tv") ($nameAC + ".wu");
+connectAttr ($nameAC + ".crx") ($nameLocator + ".rx");
+connectAttr ($nameAC + ".cry") ($nameLocator + ".ry");
+connectAttr ($nameAC + ".crz") ($nameLocator + ".rz");
+
+select -r $nameLocator;
+return ($nameLocator);
+
+}//End of proc
