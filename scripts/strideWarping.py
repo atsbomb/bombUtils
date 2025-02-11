@@ -48,4 +48,3 @@ def strideWarping():
     cmds.bakeResults(footA, footB, time=(minTime, maxTime), sb=1, sm=0, pok=1)
     cmds.delete(locA, locB)
     
-strideWarping()
