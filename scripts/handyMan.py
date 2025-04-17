@@ -81,10 +81,34 @@ def unlockLockedNode():
 def optimizeSceneOptions():
     mel.eval('OptimizeSceneOptions;')
 
+def fixCameraClip():
+    curPanel = cmds.getPanel(withFocus=1)
+    cam = cmds.modelPanel(curPanel, q=1, camera=1)
+
+    if cmds.nodeType(cam) == 'camera':
+        camShape = cam
+    else:
+        camShape = cmds.listRelatives(cam, s=1)[0]
+
+    cmds.setAttr(f'{camShape}.nearClipPlane', 5)
+    cmds.setAttr(f'{camShape}.farClipPlane', 10000000)
+
 def run():
     win = cmds.window(t='Handy Man')
 
     cmds.columnLayout()
+
+    cmds.rowLayout(numberOfColumns=5)
+    cmds.text(l='Grid')
+    cmds.button(l='1cm', c='import maya.cmds as cmds; cmds.grid(spacing=1, divisions=0, size=10)')
+    cmds.button(l='10cm', c='import maya.cmds as cmds; cmds.grid(spacing=10, divisions=0, size=100)')
+    cmds.button(l='1m', c='import maya.cmds as cmds; cmds.grid(spacing=100, divisions=0, size=1000)')
+    cmds.button(l='10m', c='import maya.cmds as cmds; cmds.grid(spacing=1000, divisions=0, size=10000)')
+    cmds.setParent('..')
+    cmds.separator()
+
+    cmds.button(l='Fix Clipping', c='import handyMan; import importlib; importlib.reload(handyMan); handyMan.fixCameraClip()')
+    cmds.separator()
 
     cmds.button(l='Delete Unknown Nodes', c='import handyMan; import importlib; importlib.reload(handyMan); handyMan.deleteUnknownNodes()')
     cmds.button(l='Delete Static Channels', c='import handyMan; import importlib; importlib.reload(handyMan); handyMan.deleteStaticChannelAllCons()')
