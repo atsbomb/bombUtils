@@ -107,6 +107,15 @@ def run():
     cmds.setParent('..')
     cmds.separator()
 
+    cmds.rowLayout(numberOfColumns=5)
+    cmds.text(l='Joint Display')
+    cmds.button(l='0.01', c='import maya.cmds as cmds; cmds.jointDisplayScale(0.01)')
+    cmds.button(l='0.1', c='import maya.cmds as cmds; cmds.jointDisplayScale(0.1)')
+    cmds.button(l='0.5', c='import maya.cmds as cmds; cmds.jointDisplayScale(0.5)')
+    cmds.button(l='1.0', c='import maya.cmds as cmds; cmds.jointDisplayScale(1.0)')
+    cmds.setParent('..')
+    cmds.separator()
+
     cmds.button(l='Fix Clipping', c='import handyMan; import importlib; importlib.reload(handyMan); handyMan.fixCameraClip()')
     cmds.separator()
 
