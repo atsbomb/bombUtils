@@ -98,21 +98,23 @@ def run():
 
     cmds.columnLayout()
 
-    cmds.rowLayout(numberOfColumns=5)
+    cmds.rowLayout(numberOfColumns=6)
     cmds.text(l='Grid')
     cmds.button(l='1cm', c='import maya.cmds as cmds; cmds.grid(spacing=1, divisions=0, size=10)')
     cmds.button(l='10cm', c='import maya.cmds as cmds; cmds.grid(spacing=10, divisions=0, size=100)')
     cmds.button(l='1m', c='import maya.cmds as cmds; cmds.grid(spacing=100, divisions=0, size=1000)')
     cmds.button(l='10m', c='import maya.cmds as cmds; cmds.grid(spacing=1000, divisions=0, size=10000)')
+    cmds.button(l='...', c='import maya.mel as mel; mel.eval("GridOptions")')
     cmds.setParent('..')
     cmds.separator()
 
-    cmds.rowLayout(numberOfColumns=5)
+    cmds.rowLayout(numberOfColumns=6)
     cmds.text(l='Joint Display')
     cmds.button(l='0.01', c='import maya.cmds as cmds; cmds.jointDisplayScale(0.01)')
     cmds.button(l='0.1', c='import maya.cmds as cmds; cmds.jointDisplayScale(0.1)')
     cmds.button(l='0.5', c='import maya.cmds as cmds; cmds.jointDisplayScale(0.5)')
     cmds.button(l='1.0', c='import maya.cmds as cmds; cmds.jointDisplayScale(1.0)')
+    cmds.button(l='...', c='import maya.mel as mel; mel.eval("JdsWin")')
     cmds.setParent('..')
     cmds.separator()
 
