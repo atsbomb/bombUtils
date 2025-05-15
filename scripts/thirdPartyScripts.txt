@@ -7,3 +7,5 @@ tweenMachine.py
 oaSmoothKeys.mel
 AwesomeLights.mel
 kfRivet.mel
+jop_select
+animation_retargeting_tool
