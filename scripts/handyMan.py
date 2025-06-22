@@ -66,6 +66,10 @@ def deleteNonDefaultCamera():
     else:
         cmds.warning('No non default camera found.')
 
+def playbackSpeed(speed = 1):
+    cmds.playbackOptions(e=1, playbackSpeed=0)  # 0 ... play every frame,  1 ... FPS x 1,  2 ... FPS x 2
+    cmds.playbackOptions(e=1, maxPlaybackSpeed=1) # 0 ... free, 1 ... FPS x 1, 2 ... FPS x 2
+    cmds.playbackOptions(e=1, by=speed)
 
 def unlockLockedNode():
     sels = cmds.ls(sl=1)
@@ -118,8 +122,11 @@ def run():
     cmds.setParent('..')
     cmds.separator()
 
-    cmds.button(l='Fix Clipping', c='import handyMan; import importlib; importlib.reload(handyMan); handyMan.fixCameraClip()')
-    cmds.separator()
+    cmds.rowLayout(numberOfColumns=3)
+    cmds.button(l='Slow', c='import handyMan; import imp; imp.reload(handyMan); handyMan.playbackSpeed(0.1)')
+    cmds.floatSlider('playbackSpeedFloatSlider', min=0.001, max=1, v=1, cc='import maya.cmds as cmds; import imp; imp.reload(handyMan); v = cmds.floatSlider("playbackSpeedFloatSlider", q=1, v=1); handyMan.playbackSpeed(round(v,3)) ')
+    cmds.button(l='Real', c='import handyMan; import imp; imp.reload(handyMan); handyMan.playbackSpeed(1.0)')
+    cmds.setParent('..')
 
     cmds.button(l='Delete Unknown Nodes', c='import handyMan; import importlib; importlib.reload(handyMan); handyMan.deleteUnknownNodes()')
     cmds.button(l='Delete Static Channels', c='import handyMan; import importlib; importlib.reload(handyMan); handyMan.deleteStaticChannelAllCons()')
@@ -133,6 +140,7 @@ def run():
     cmds.button(l='Optimize Scene', c='import handyMan; import importlib; importlib.reload(handyMan); handyMan.optimizeSceneOptions()')
     cmds.separator()
     cmds.button(l='Suspended Viewport Fix', c='import maya.cmds as cmds; cmds.refresh(suspend=0)')
+    cmds.button(l='Fix Clipping', c='import handyMan; import importlib; importlib.reload(handyMan); handyMan.fixCameraClip()')
 
     cmds.showWindow(win)
 
