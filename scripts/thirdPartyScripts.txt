@@ -9,3 +9,4 @@ AwesomeLights.mel
 kfRivet.mel
 jop_select
 animation_retargeting_tool
+dwPicker
