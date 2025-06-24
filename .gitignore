@@ -1,1 +1,5 @@
 scripts/__pycache__/
+scripts/dwpicker/__pycache__/
+scripts/dwpicker/ingest/__pycache__/
+scripts/dwpicker/ingest/animschool/__pycache__/
+scripts/dwpicker/designer/__pycache__/
